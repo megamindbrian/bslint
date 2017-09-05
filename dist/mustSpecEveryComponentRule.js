@@ -40,12 +40,8 @@ var Rule = (function (_super) {
     return Rule;
 }(Lint.Rules.AbstractRule));
 exports.Rule = Rule;
-function searchForSpec(filename) {
-    var searchName = path.basename(filename)
-        .replace(/\.ts$/ig, '')
-        .replace(/\.component|\.service/ig, '');
-    var searchDirectory = path.dirname(path.dirname(filename));
-    var results = glob.sync('**/' + searchName + '**.spec.ts', {
+function getSearchResults(searchName, searchDirectory) {
+    return glob.sync('**/' + searchName + '**.spec.ts', {
         ignore: [
             '**/node_modules/**',
             '**/packages/**',
@@ -70,6 +66,16 @@ function searchForSpec(filename) {
         nodir: true,
         strict: false
     });
+}
+function searchForSpec(filename) {
+    var searchDirectory = path.dirname(path.dirname(filename));
+    var searchName = path.basename(filename)
+        .replace(/\.ts$/ig, '');
+    var results = getSearchResults(searchName, searchDirectory);
+    if (results.length == 0) {
+        searchName = searchName.replace('/\.component|\.service/ig', '');
+        results = getSearchResults(searchName, searchDirectory);
+    }
     if (results.length === 0) {
         return void 0;
     }
@@ -127,7 +133,7 @@ var ComponentSpecSearcher = (function (_super) {
             this.generateFailure(node.pos, node.end, failureConfig);
         }
         else {
-            this.specText = fs.readFileSync(this.foundSpec).toString();
+            this.specText = fs.readFileSync(this.foundSpec).toString('UTF-8');
         }
     };
     ComponentSpecSearcher.prototype.generateFailure = function (start, width, failureConfig) {

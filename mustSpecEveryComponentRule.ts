@@ -28,17 +28,9 @@ export class Rule extends Lint.Rules.AbstractRule {
     }
 }
 
-function searchForSpec(filename: string): string {
-    // parse off the .ts and .component naming conventions
-    let searchName = path.basename(filename)
-        .replace(/\.ts$/ig, '')
-        .replace(/\.component|\.service/ig, '');
-
-    // search one level up from current component
-    let searchDirectory = path.dirname(path.dirname(filename));
-
+function getSearchResults(searchName: string, searchDirectory: string) {
     // search for a spec using glob.sync()
-    let results = glob.sync('**/' + searchName + '**.spec.ts', {
+    return glob.sync('**/' + searchName + '**.spec.ts', {
         ignore: [
             '**/node_modules/**',
             '**/packages/**',
@@ -63,6 +55,22 @@ function searchForSpec(filename: string): string {
         nodir: true,
         strict: false
     });
+}
+
+function searchForSpec(filename: string): string {
+
+    // search one level up from current component
+    let searchDirectory = path.dirname(path.dirname(filename));
+
+    // parse off the .ts and .component naming conventions
+    let searchName = path.basename(filename)
+        .replace(/\.ts$/ig, '');
+
+    let results = getSearchResults(searchName, searchDirectory);
+    if (results.length == 0) {
+        searchName = searchName.replace('/\.component|\.service/ig', '');
+        results = getSearchResults(searchName, searchDirectory);
+    }
 
     // TODO: recommend naming changes?
     if (results.length === 0) {
@@ -140,7 +148,7 @@ export class ComponentSpecSearcher extends NgWalker {
             failureConfig.unshift(Rule.SPEC_FAILURE_STRING);
             this.generateFailure(node.pos, node.end, failureConfig);
         } else {
-            this.specText = fs.readFileSync(this.foundSpec).toString();
+            this.specText = fs.readFileSync(this.foundSpec).toString('UTF-8');
         }
     }
 

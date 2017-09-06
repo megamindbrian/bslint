@@ -41,7 +41,7 @@ var Rule = (function (_super) {
 }(Lint.Rules.AbstractRule));
 exports.Rule = Rule;
 function getSearchResults(searchName, searchDirectory) {
-    return glob.sync('**/' + searchName + '**.spec.ts', {
+    return glob.sync('**/' + searchName, {
         ignore: [
             '**/node_modules/**',
             '**/packages/**',
@@ -68,12 +68,15 @@ function getSearchResults(searchName, searchDirectory) {
     });
 }
 function searchForSpec(filename) {
-    var searchDirectory = path.dirname(path.dirname(filename));
+    var searchDirectory = path.dirname(filename);
     var searchName = path.basename(filename)
-        .replace(/\.ts$/ig, '');
+        .replace(/\.ts$/ig, '.spec.ts');
     var results = getSearchResults(searchName, searchDirectory);
     if (results.length == 0) {
-        searchName = searchName.replace('/\.component|\.service/ig', '');
+        searchDirectory = path.dirname(searchDirectory);
+        searchName = searchName
+            .replace(/\.ts$/ig, '**.spec.ts')
+            .replace('/\.component|\.service/ig', '');
         results = getSearchResults(searchName, searchDirectory);
     }
     if (results.length === 0) {

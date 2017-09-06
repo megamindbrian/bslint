@@ -30,7 +30,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 
 function getSearchResults(searchName: string, searchDirectory: string) {
     // search for a spec using glob.sync()
-    return glob.sync('**/' + searchName + '**.spec.ts', {
+    return glob.sync('**/' + searchName, {
         ignore: [
             '**/node_modules/**',
             '**/packages/**',
@@ -60,15 +60,18 @@ function getSearchResults(searchName: string, searchDirectory: string) {
 function searchForSpec(filename: string): string {
 
     // search one level up from current component
-    let searchDirectory = path.dirname(path.dirname(filename));
+    let searchDirectory = path.dirname(filename);
 
     // parse off the .ts and .component naming conventions
     let searchName = path.basename(filename)
-        .replace(/\.ts$/ig, '');
+        .replace(/\.ts$/ig, '.spec.ts');
 
     let results = getSearchResults(searchName, searchDirectory);
     if (results.length == 0) {
-        searchName = searchName.replace('/\.component|\.service/ig', '');
+        searchDirectory = path.dirname(searchDirectory);
+        searchName = searchName
+            .replace(/\.ts$/ig, '**.spec.ts')
+            .replace('/\.component|\.service/ig', '');
         results = getSearchResults(searchName, searchDirectory);
     }
 
@@ -106,7 +109,7 @@ export class ComponentSpecSearcher extends NgWalker {
                 === SyntaxKind.current().ProtectedKeyword);
 
         if (typeof this.className == 'undefined') {
-            this.checkClassSpec(node.parent as ts.ClassDeclaration, location)
+            this.checkClassSpec(node.parent as ts.ClassDeclaration, location);
         }
 
         if (isPublic) {

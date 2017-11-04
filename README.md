@@ -7,4 +7,10 @@ https://github.com/Microsoft/tslint-microsoft-contrib
 
 TODO: Can Resharper rule be extended?  cslint?
 
+TODO: repair for un-alphabetized imports
+
+TODO: check length of functions
+
+TODO: alpabetize lib imports (e.g. ```import * from '<lib>'```) separated by local (e.g. starts with a "./") and vendor modules.
+
 
